@@ -22,12 +22,23 @@ jobs:
       - name: Compute version
         id: version
         shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # push毎にrun_numberを10進カウンタとして扱う: 1→0.1, 9→0.9, 10→1.0, 11→1.1 ...
-          $runNumber = [int]"${{ github.run_number }}"
-          $major = [math]::Floor($runNumber / 10)
-          $minor = $runNumber % 10
-          $version = "$major.$minor"
+          # 直前のリリースタグから1つ増分する(オドメーター式の桁上げ): 1.0.1→1.0.2→…→1.0.9→1.1.0→…→1.9.9→2.0.0
+          $latestTag = gh release list --repo ${{ github.repository }} --limit 1 --json tagName --jq ".[0].tagName"
+          if (-not $latestTag) { $latestTag = "v0.0.0" }
+
+          $parts = $latestTag.TrimStart("v").Split(".")
+          $major = [int]$parts[0]
+          $minor = [int]$parts[1]
+          $patch = [int]$parts[2]
+
+          $patch++
+          if ($patch -ge 10) { $patch = 0; $minor++ }
+          if ($minor -ge 10) { $minor = 0; $major++ }
+
+          $version = "$major.$minor.$patch"
           echo "version=$version" >> $env:GITHUB_OUTPUT
 
       - name: Publish self-contained build
