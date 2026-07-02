@@ -1,0 +1,62 @@
+<Window x:Class="KabeCale.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:KabeCale.App"
+        mc:Ignorable="d"
+        Title="YMBデスクトップカレンダー" Height="460" Width="420"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="CanResizeWithGrip"
+        ShowInTaskbar="False">
+    <Border x:Name="RootBorder"
+            Background="{DynamicResource CalBackgroundBrush}"
+            CornerRadius="10"
+            BorderBrush="#33000000"
+            BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- ヘッダー: ドラッグ移動 + 月ナビ + メニュー -->
+            <Border x:Name="HeaderBar" Grid.Row="0"
+                    Background="{DynamicResource CalHeaderBrush}"
+                    CornerRadius="10,10,0,0"
+                    MouseLeftButtonDown="HeaderBar_MouseLeftButtonDown">
+                <Grid Margin="8,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Button x:Name="PrevMonthButton" Grid.Column="0" Content="◀" Width="24" Height="24"
+                            Click="PrevMonth_Click" Background="Transparent" BorderThickness="0"
+                            Foreground="{DynamicResource CalHeaderForegroundBrush}"/>
+
+                    <TextBlock x:Name="YearHeaderText" Grid.Column="1"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               FontSize="14" FontWeight="Bold"
+                               Foreground="{DynamicResource CalHeaderForegroundBrush}"/>
+
+                    <Button x:Name="NextMonthButton" Grid.Column="2" Content="▶" Width="24" Height="24"
+                            Click="NextMonth_Click" Background="Transparent" BorderThickness="0"
+                            Foreground="{DynamicResource CalHeaderForegroundBrush}"/>
+
+                    <Button x:Name="SettingsButtonElement" Grid.Column="3" Content="⚙" Width="24" Height="24" Margin="6,0,0,0"
+                            Click="SettingsButton_Click" Background="Transparent" BorderThickness="0"
+                            Foreground="{DynamicResource CalHeaderForegroundBrush}"/>
+                </Grid>
+            </Border>
+
+            <!-- 月パネル(1〜3ヶ月分を横並び表示、ウィンドウ幅に追従して伸縮) -->
+            <UniformGrid x:Name="MonthsHost" Grid.Row="1" Rows="1"
+                         HorizontalAlignment="Stretch" Margin="4"/>
+        </Grid>
+    </Border>
+</Window>

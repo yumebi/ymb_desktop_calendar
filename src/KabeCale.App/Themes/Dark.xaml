@@ -1,0 +1,15 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <SolidColorBrush x:Key="CalBackgroundBrush" Color="#CC1E1E1E"/>
+    <SolidColorBrush x:Key="CalForegroundBrush" Color="#FFEAEAEA"/>
+    <SolidColorBrush x:Key="CalHeaderBrush" Color="#FF2D2D30"/>
+    <SolidColorBrush x:Key="CalHeaderForegroundBrush" Color="#FFEAEAEA"/>
+    <SolidColorBrush x:Key="CalGridLineBrush" Color="#33FFFFFF"/>
+    <SolidColorBrush x:Key="CalHolidayBrush" Color="#FFFF6B6B"/>
+    <SolidColorBrush x:Key="CalSundayBrush" Color="#FFFF6B6B"/>
+    <SolidColorBrush x:Key="CalSaturdayBrush" Color="#FF6FA8DC"/>
+    <SolidColorBrush x:Key="CalTodayBrush" Color="#556FA8DC"/>
+    <SolidColorBrush x:Key="CalOtherMonthBrush" Color="#66808080"/>
+
+</ResourceDictionary>
