@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media;
 using System.Windows.Threading;
 using KabeCale.App.Models;
 using KabeCale.App.Native;
@@ -20,8 +21,10 @@ public partial class MainWindow : Window
     private readonly SettingsService _settingsService = new();
     private readonly HolidayService _holidayService = new();
     private readonly MemoService _memoService = new();
+    private readonly EventService _eventService = new();
     private readonly ThemeService _themeService = new();
     private readonly UpdateService _updateService = new();
+    private readonly BackupService _backupService = new();
 
     private AppSettings _settings = new();
     private DateTime _currentMonth = new(DateTime.Today.Year, DateTime.Today.Month, 1);
@@ -50,6 +53,7 @@ public partial class MainWindow : Window
         EnsureWindowIsOnScreen();
 
         _themeService.Apply(_settings.ThemeName);
+        ApplyBackgroundOpacity();
 
         var hwnd = new WindowInteropHelper(this).Handle;
         if (_settings.PinToDesktop && !DesktopPin.Pin(hwnd))
@@ -105,9 +109,24 @@ public partial class MainWindow : Window
         SetupTrayIcon();
         _ = RenderMonthsAsync();
         _ = CheckForUpdateOnStartupAsync();
+        _ = Task.Run(() => _backupService.RunBackup());
 
         LocationChanged += (_, _) => ScheduleSaveWindowPosition();
         SizeChanged += (_, _) => ScheduleSaveWindowPosition();
+    }
+
+    /// <summary>
+    /// 背景ブラシのOpacityだけを変える(ウィンドウ全体のOpacityにすると文字まで
+    /// 薄くなってしまうため)。テーマ変更時は現在のテーマブラシを取り直して再適用する。
+    /// </summary>
+    private void ApplyBackgroundOpacity()
+    {
+        if (FindResource("CalBackgroundBrush") is Brush brush)
+        {
+            var background = brush.Clone();
+            background.Opacity = _settings.BackgroundOpacity;
+            RootBorder.Background = background;
+        }
     }
 
     /// <summary>
@@ -190,32 +209,35 @@ public partial class MainWindow : Window
         });
     }
 
+    /// <summary>
+    /// 表示月数と並び方向から月パネルの行数・列数を決める。6ヶ月/12ヶ月は2次元グリッド
+    /// (横並び時2x3・3x4、縦並び時はそれを転置した3x2・4x3)、それ以外は1行または1列。
+    /// </summary>
+    private (int Rows, int Columns) GetMonthGridDimensions()
+    {
+        var vertical = _settings.MonthLayoutDirection == "Vertical";
+
+        if (_settings.MonthCount is 6 or 12)
+        {
+            var (baseRows, baseColumns) = _settings.MonthCount == 6 ? (2, 3) : (3, 4);
+            return vertical ? (baseColumns, baseRows) : (baseRows, baseColumns);
+        }
+
+        return vertical ? (_settings.MonthCount, 1) : (1, _settings.MonthCount);
+    }
+
     private void ApplyMonthsHostLayout()
     {
-        if (_settings.MonthLayoutDirection == "Vertical")
-        {
-            MonthsHost.Rows = 0;
-            MonthsHost.Columns = 1;
-        }
-        else
-        {
-            MonthsHost.Rows = 1;
-            MonthsHost.Columns = 0;
-        }
+        var (rows, columns) = GetMonthGridDimensions();
+        MonthsHost.Rows = rows;
+        MonthsHost.Columns = columns;
     }
 
     private void UpdateWindowSizeForLayout()
     {
-        if (_settings.MonthLayoutDirection == "Vertical")
-        {
-            Width = 280;
-            Height = 60 + MonthPanelHeight * _settings.MonthCount;
-        }
-        else
-        {
-            Width = 60 + MonthPanelWidth * _settings.MonthCount;
-            Height = 460;
-        }
+        var (rows, columns) = GetMonthGridDimensions();
+        Width = 60 + MonthPanelWidth * columns;
+        Height = 60 + MonthPanelHeight * rows;
     }
 
     private async Task RenderMonthsAsync()
@@ -234,7 +256,7 @@ public partial class MainWindow : Window
         {
             var panel = (MonthPanel)MonthsHost.Children[i];
             var month = _currentMonth.AddMonths(i);
-            renderTasks.Add(panel.RenderAsync(month, _holidayService, _memoService, OnDayCellClicked));
+            renderTasks.Add(panel.RenderAsync(month, _holidayService, _memoService, _eventService, OnDayCellClicked, _settings));
         }
         await Task.WhenAll(renderTasks);
     }
@@ -242,10 +264,11 @@ public partial class MainWindow : Window
     private void OnDayCellClicked(DateTime date)
     {
         var dateOnly = DateOnly.FromDateTime(date);
-        var dialog = new MemoDialog(date, _memoService.Get(dateOnly)) { Owner = this };
+        var dialog = new DayDetailDialog(date, _memoService.Get(dateOnly), _eventService.Get(dateOnly)) { Owner = this };
         if (dialog.ShowDialog() == true)
         {
             _memoService.Set(dateOnly, dialog.MemoText);
+            _eventService.Set(dateOnly, dialog.Events);
             _ = RenderMonthsAsync();
         }
     }
@@ -262,10 +285,51 @@ public partial class MainWindow : Window
         _ = RenderMonthsAsync();
     }
 
+    /// <summary>マウスホイールで前後の月に移動する(上スクロールで前月、下スクロールで翌月)。</summary>
+    private void MonthsHost_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        _currentMonth = _currentMonth.AddMonths(e.Delta > 0 ? -1 : 1);
+        _ = RenderMonthsAsync();
+        e.Handled = true;
+    }
+
+    private void TodayButton_Click(object sender, RoutedEventArgs e)
+    {
+        GoToToday();
+    }
+
+    private void GoToToday()
+    {
+        _currentMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        _ = RenderMonthsAsync();
+    }
+
     private void HeaderBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (e.ClickCount == 2)
+        {
+            // 枠なしウィンドウはスナップ等で最大化されると戻す手段がないため、
+            // 最大化中のダブルクリックは今日ジャンプではなく元のサイズへの復帰にする。
+            if (WindowState == WindowState.Maximized)
+                WindowState = WindowState.Normal;
+            else
+                GoToToday();
             return;
+        }
+
+        if (WindowState == WindowState.Maximized)
+        {
+            // 最大化中にヘッダーを掴んだら、カーソル位置を基準に元サイズへ戻してそのままドラッグ継続。
+            var cursorInWindow = e.GetPosition(this);
+            var cursorOnScreen = PointToScreen(cursorInWindow);
+            var ratioX = cursorInWindow.X / Math.Max(ActualWidth, 1);
+
+            WindowState = WindowState.Normal;
+
+            Left = cursorOnScreen.X - Width * ratioX;
+            Top = cursorOnScreen.Y - 12;
+        }
+
         DragMove();
     }
 
@@ -285,6 +349,10 @@ public partial class MainWindow : Window
         var clickThroughChanged = updated.ClickThrough != _settings.ClickThrough;
         var monthCountChanged = updated.MonthCount != _settings.MonthCount;
         var layoutChanged = updated.MonthLayoutDirection != _settings.MonthLayoutDirection;
+        var weekNumbersChanged = updated.ShowWeekNumbers != _settings.ShowWeekNumbers;
+        var firstDayOfWeekChanged = updated.FirstDayOfWeek != _settings.FirstDayOfWeek;
+        var fontScaleChanged = updated.FontScale != _settings.FontScale;
+        var restDayRulesChanged = !RestDayRulesEqual(updated.RestDayRules, _settings.RestDayRules);
 
         _settings = updated;
         _settingsService.Save(_settings);
@@ -293,13 +361,14 @@ public partial class MainWindow : Window
         {
             _themeService.Apply(_settings.ThemeName);
         }
+        ApplyBackgroundOpacity();
 
         if (monthCountChanged || layoutChanged)
         {
             UpdateWindowSizeForLayout();
         }
 
-        if (themeChanged || monthCountChanged || layoutChanged)
+        if (themeChanged || monthCountChanged || layoutChanged || weekNumbersChanged || firstDayOfWeekChanged || fontScaleChanged || restDayRulesChanged)
         {
             _ = RenderMonthsAsync();
         }
@@ -320,6 +389,17 @@ public partial class MainWindow : Window
                 _clickThroughMenuItem.Checked = _settings.ClickThrough;
             UpdateInteractiveControlsVisibility();
         }
+    }
+
+    /// <summary>休日ルール一覧が(順序を問わず)同じ内容かどうかを比較する。</summary>
+    private static bool RestDayRulesEqual(List<RestDayRule> a, List<RestDayRule> b)
+    {
+        if (a.Count != b.Count)
+            return false;
+
+        var setA = a.Select(r => (r.DayOfWeek, r.WeekOfMonth, r.Type)).OrderBy(t => t).ToList();
+        var setB = b.Select(r => (r.DayOfWeek, r.WeekOfMonth, r.Type)).OrderBy(t => t).ToList();
+        return setA.SequenceEqual(setB);
     }
 
     private void SetupTrayIcon()

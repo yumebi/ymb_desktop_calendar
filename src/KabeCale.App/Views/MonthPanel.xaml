@@ -14,7 +14,19 @@
                    FontSize="14" FontWeight="Bold"
                    Foreground="{DynamicResource CalForegroundBrush}"/>
 
-        <UniformGrid x:Name="WeekdayHeader" Grid.Row="1" Columns="7" Margin="0,0,0,2"/>
+        <!-- 曜日ヘッダー(先頭列は週番号表示用のスペーサー。DaysGridと列構成を揃える) -->
+        <Grid x:Name="WeekdayHeader" Grid.Row="1" Margin="0,0,0,2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="WeekNumberHeaderColumn" Width="0"/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+        </Grid>
 
         <Grid x:Name="DaysGrid" Grid.Row="2">
             <Grid.RowDefinitions>
@@ -26,6 +38,8 @@
                 <RowDefinition/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
+                <!-- 週番号列(週番号表示OFFのときは幅0で不可視) -->
+                <ColumnDefinition x:Name="WeekNumberColumn" Width="0"/>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
                 <ColumnDefinition/>

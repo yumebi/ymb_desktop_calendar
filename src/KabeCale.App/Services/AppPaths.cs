@@ -9,6 +9,7 @@ public static class AppPaths
 
     public static string SettingsFile => Path.Combine(RootDir, "settings.json");
     public static string MemosFile => Path.Combine(RootDir, "memos.json");
+    public static string EventsFile => Path.Combine(RootDir, "events.json");
     public static string HolidayCacheFile(int year) => Path.Combine(RootDir, $"holidays_{year}.json");
 
     public static void EnsureRootDir()

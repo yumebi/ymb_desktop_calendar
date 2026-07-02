@@ -11,4 +11,11 @@ public class AppSettings
     public bool ClickThrough { get; set; } = false;
     public int MonthCount { get; set; } = 1;
     public string MonthLayoutDirection { get; set; } = "Horizontal";
+    public bool ShowWeekNumbers { get; set; } = false;
+    public string FirstDayOfWeek { get; set; } = "Sunday";
+    public double BackgroundOpacity { get; set; } = 1.0;
+    public double FontScale { get; set; } = 1.0;
+
+    /// <summary>曜日×週序数で指定する休日(公休日/私休日)のルール一覧。</summary>
+    public List<RestDayRule> RestDayRules { get; set; } = new();
 }

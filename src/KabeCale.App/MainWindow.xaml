@@ -39,10 +39,18 @@
                             Click="PrevMonth_Click" Background="Transparent" BorderThickness="0"
                             Foreground="{DynamicResource CalHeaderForegroundBrush}"/>
 
-                    <TextBlock x:Name="YearHeaderText" Grid.Column="1"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                               FontSize="14" FontWeight="Bold"
-                               Foreground="{DynamicResource CalHeaderForegroundBrush}"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock x:Name="YearHeaderText" VerticalAlignment="Center"
+                                   FontSize="14" FontWeight="Bold"
+                                   Foreground="{DynamicResource CalHeaderForegroundBrush}"/>
+
+                        <Button x:Name="TodayButton" Content="今日" Margin="8,0,0,0"
+                                Padding="6,1" FontSize="10" Click="TodayButton_Click"
+                                Background="Transparent" BorderThickness="1"
+                                BorderBrush="{DynamicResource CalHeaderForegroundBrush}"
+                                Foreground="{DynamicResource CalHeaderForegroundBrush}"/>
+                    </StackPanel>
 
                     <Button x:Name="NextMonthButton" Grid.Column="2" Content="▶" Width="24" Height="24"
                             Click="NextMonth_Click" Background="Transparent" BorderThickness="0"
@@ -54,9 +62,10 @@
                 </Grid>
             </Border>
 
-            <!-- 月パネル(1〜3ヶ月分を横または縦に表示、ウィンドウサイズに追従して伸縮) -->
+            <!-- 月パネル(複数ヶ月分を横または縦に表示、ウィンドウサイズに追従して伸縮) -->
             <UniformGrid x:Name="MonthsHost" Grid.Row="1"
-                         HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="4"/>
+                         HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="4"
+                         PreviewMouseWheel="MonthsHost_PreviewMouseWheel"/>
         </Grid>
     </Border>
 </Window>

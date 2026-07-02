@@ -7,6 +7,7 @@
     <SolidColorBrush x:Key="CalHeaderForegroundBrush" Color="#FFFFFFFF"/>
     <SolidColorBrush x:Key="CalGridLineBrush" Color="#22355E3B"/>
     <SolidColorBrush x:Key="CalHolidayBrush" Color="#FFC1613D"/>
+    <SolidColorBrush x:Key="CalPrivateRestBrush" Color="#FFB5726B"/>
     <SolidColorBrush x:Key="CalSundayBrush" Color="#FFC1613D"/>
     <SolidColorBrush x:Key="CalSaturdayBrush" Color="#FF4F7942"/>
     <SolidColorBrush x:Key="CalTodayBrush" Color="#4D8CB369"/>
