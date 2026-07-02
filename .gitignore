@@ -6,3 +6,4 @@ dist/
 *.user
 .vs/
 .claude/
+.codegraph/

@@ -1,11 +1,14 @@
 <Window x:Class="KabeCale.App.Views.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="設定" Height="330" Width="280"
+        Title="設定" Height="410" Width="280"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize">
+        ResizeMode="NoResize"
+        Background="{DynamicResource CalBackgroundBrush}">
     <Grid Margin="12">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -17,17 +20,26 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="テーマ" Margin="0,0,0,4"/>
+        <TextBlock Grid.Row="0" Text="テーマ" Margin="0,0,0,4"
+                   Foreground="{DynamicResource CalForegroundBrush}"/>
         <ComboBox x:Name="ThemeComboBox" Grid.Row="1" Margin="0,0,0,10"/>
 
-        <TextBlock Grid.Row="2" Text="表示月数" Margin="0,0,0,4"/>
+        <TextBlock Grid.Row="2" Text="表示月数" Margin="0,0,0,4"
+                   Foreground="{DynamicResource CalForegroundBrush}"/>
         <ComboBox x:Name="MonthCountComboBox" Grid.Row="3" Margin="0,0,0,10"/>
 
-        <CheckBox x:Name="PinToDesktopCheckBox" Grid.Row="4" Content="デスクトップに常駐(壁紙化)" Margin="0,0,0,8"/>
-        <CheckBox x:Name="ClickThroughCheckBox" Grid.Row="5" Content="クリックを透過させる" Margin="0,0,0,8"/>
-        <CheckBox x:Name="LaunchAtStartupCheckBox" Grid.Row="6" Content="Windows起動時に自動起動" Margin="0,0,0,8"/>
+        <TextBlock Grid.Row="4" Text="並び方向" Margin="0,0,0,4"
+                   Foreground="{DynamicResource CalForegroundBrush}"/>
+        <ComboBox x:Name="LayoutDirectionComboBox" Grid.Row="5" Margin="0,0,0,10"/>
 
-        <StackPanel Grid.Row="8" Orientation="Horizontal" HorizontalAlignment="Right">
+        <CheckBox x:Name="PinToDesktopCheckBox" Grid.Row="6" Content="デスクトップに常駐(壁紙化)" Margin="0,0,0,8"
+                  Foreground="{DynamicResource CalForegroundBrush}"/>
+        <CheckBox x:Name="ClickThroughCheckBox" Grid.Row="7" Content="クリックを透過させる" Margin="0,0,0,8"
+                  Foreground="{DynamicResource CalForegroundBrush}"/>
+        <CheckBox x:Name="LaunchAtStartupCheckBox" Grid.Row="8" Content="Windows起動時に自動起動" Margin="0,0,0,8"
+                  Foreground="{DynamicResource CalForegroundBrush}"/>
+
+        <StackPanel Grid.Row="10" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Content="OK" Width="70" Margin="0,0,6,0" Click="OkButton_Click" IsDefault="True"/>
             <Button Content="キャンセル" Width="70" Click="CancelButton_Click" IsCancel="True"/>
         </StackPanel>

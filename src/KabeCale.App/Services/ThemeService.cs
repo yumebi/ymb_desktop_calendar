@@ -4,7 +4,7 @@ namespace KabeCale.App.Services;
 
 public class ThemeService
 {
-    public static readonly string[] AvailableThemes = { "Light", "Dark", "Pastel" };
+    public static readonly string[] AvailableThemes = { "Light", "Dark", "Pastel", "Ocean", "Forest", "Sunset" };
 
     public void Apply(string themeName)
     {

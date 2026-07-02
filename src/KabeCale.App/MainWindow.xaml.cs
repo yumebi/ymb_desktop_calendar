@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Threading;
 using KabeCale.App.Models;
 using KabeCale.App.Native;
 using KabeCale.App.Services;
@@ -14,6 +15,7 @@ namespace KabeCale.App;
 public partial class MainWindow : Window
 {
     private const double MonthPanelWidth = 220;
+    private const double MonthPanelHeight = 380;
 
     private readonly SettingsService _settingsService = new();
     private readonly HolidayService _holidayService = new();
@@ -25,6 +27,7 @@ public partial class MainWindow : Window
     private DateTime _currentMonth = new(DateTime.Today.Year, DateTime.Today.Month, 1);
     private NotifyIcon? _trayIcon;
     private System.Windows.Forms.ToolStripMenuItem? _clickThroughMenuItem;
+    private DispatcherTimer? _savePositionTimer;
     private string? _pendingReleaseUrl;
     private bool _allowClose;
 
@@ -44,6 +47,7 @@ public partial class MainWindow : Window
         Top = _settings.WindowTop;
         Width = _settings.WindowWidth;
         Height = _settings.WindowHeight;
+        EnsureWindowIsOnScreen();
 
         _themeService.Apply(_settings.ThemeName);
 
@@ -58,6 +62,29 @@ public partial class MainWindow : Window
         if (_settings.ClickThrough)
             DesktopPin.SetClickThrough(hwnd, true);
         UpdateInteractiveControlsVisibility();
+    }
+
+    /// <summary>
+    /// 保存された位置が現在のモニタ構成では画面外になる場合(外付けモニタを外した等)、
+    /// プライマリモニタ内に位置を戻す。
+    /// </summary>
+    private void EnsureWindowIsOnScreen()
+    {
+        var windowRect = new System.Drawing.Rectangle(
+            (int)Left, (int)Top, (int)Math.Max(Width, 50), (int)Math.Max(Height, 50));
+
+        var isVisible = System.Windows.Forms.Screen.AllScreens.Any(screen =>
+        {
+            var overlap = System.Drawing.Rectangle.Intersect(screen.WorkingArea, windowRect);
+            return overlap.Width > 50 && overlap.Height > 50;
+        });
+
+        if (isVisible)
+            return;
+
+        var workArea = System.Windows.Forms.Screen.PrimaryScreen!.WorkingArea;
+        Left = workArea.Left + 40;
+        Top = workArea.Top + 40;
     }
 
     /// <summary>
@@ -78,6 +105,38 @@ public partial class MainWindow : Window
         SetupTrayIcon();
         _ = RenderMonthsAsync();
         _ = CheckForUpdateOnStartupAsync();
+
+        LocationChanged += (_, _) => ScheduleSaveWindowPosition();
+        SizeChanged += (_, _) => ScheduleSaveWindowPosition();
+    }
+
+    /// <summary>
+    /// 強制終了やクラッシュでも位置が失われないよう、移動/リサイズの都度(少し
+    /// デバウンスして)保存する。クリーンな終了時の保存だけに頼らない。
+    /// </summary>
+    private void ScheduleSaveWindowPosition()
+    {
+        if (_savePositionTimer is null)
+        {
+            _savePositionTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
+            _savePositionTimer.Tick += (_, _) =>
+            {
+                _savePositionTimer!.Stop();
+                SaveWindowPosition();
+            };
+        }
+
+        _savePositionTimer.Stop();
+        _savePositionTimer.Start();
+    }
+
+    private void SaveWindowPosition()
+    {
+        _settings.WindowLeft = Left;
+        _settings.WindowTop = Top;
+        _settings.WindowWidth = Width;
+        _settings.WindowHeight = Height;
+        _settingsService.Save(_settings);
     }
 
     private async Task CheckForUpdateOnStartupAsync()
@@ -131,8 +190,38 @@ public partial class MainWindow : Window
         });
     }
 
+    private void ApplyMonthsHostLayout()
+    {
+        if (_settings.MonthLayoutDirection == "Vertical")
+        {
+            MonthsHost.Rows = 0;
+            MonthsHost.Columns = 1;
+        }
+        else
+        {
+            MonthsHost.Rows = 1;
+            MonthsHost.Columns = 0;
+        }
+    }
+
+    private void UpdateWindowSizeForLayout()
+    {
+        if (_settings.MonthLayoutDirection == "Vertical")
+        {
+            Width = 280;
+            Height = 60 + MonthPanelHeight * _settings.MonthCount;
+        }
+        else
+        {
+            Width = 60 + MonthPanelWidth * _settings.MonthCount;
+            Height = 460;
+        }
+    }
+
     private async Task RenderMonthsAsync()
     {
+        ApplyMonthsHostLayout();
+
         while (MonthsHost.Children.Count < _settings.MonthCount)
             MonthsHost.Children.Add(new MonthPanel());
         while (MonthsHost.Children.Count > _settings.MonthCount)
@@ -195,6 +284,7 @@ public partial class MainWindow : Window
         var pinChanged = updated.PinToDesktop != _settings.PinToDesktop;
         var clickThroughChanged = updated.ClickThrough != _settings.ClickThrough;
         var monthCountChanged = updated.MonthCount != _settings.MonthCount;
+        var layoutChanged = updated.MonthLayoutDirection != _settings.MonthLayoutDirection;
 
         _settings = updated;
         _settingsService.Save(_settings);
@@ -204,12 +294,12 @@ public partial class MainWindow : Window
             _themeService.Apply(_settings.ThemeName);
         }
 
-        if (monthCountChanged)
+        if (monthCountChanged || layoutChanged)
         {
-            Width = 60 + MonthPanelWidth * _settings.MonthCount;
+            UpdateWindowSizeForLayout();
         }
 
-        if (themeChanged || monthCountChanged)
+        if (themeChanged || monthCountChanged || layoutChanged)
         {
             _ = RenderMonthsAsync();
         }
@@ -292,11 +382,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        _settings.WindowLeft = Left;
-        _settings.WindowTop = Top;
-        _settings.WindowWidth = Width;
-        _settings.WindowHeight = Height;
-        _settingsService.Save(_settings);
+        SaveWindowPosition();
 
         _trayIcon?.Dispose();
     }

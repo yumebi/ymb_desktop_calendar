@@ -6,6 +6,14 @@ namespace KabeCale.App.Views;
 
 public partial class SettingsWindow : Window
 {
+    private record LayoutOption(string Label, string Value);
+
+    private static readonly LayoutOption[] LayoutOptions =
+    {
+        new("横並び", "Horizontal"),
+        new("縦並び", "Vertical"),
+    };
+
     public AppSettings ResultSettings { get; private set; }
 
     private readonly AppSettings _original;
@@ -21,6 +29,11 @@ public partial class SettingsWindow : Window
 
         MonthCountComboBox.ItemsSource = new[] { 1, 2, 3 };
         MonthCountComboBox.SelectedItem = current.MonthCount;
+
+        LayoutDirectionComboBox.ItemsSource = LayoutOptions;
+        LayoutDirectionComboBox.DisplayMemberPath = "Label";
+        LayoutDirectionComboBox.SelectedValuePath = "Value";
+        LayoutDirectionComboBox.SelectedValue = current.MonthLayoutDirection;
 
         PinToDesktopCheckBox.IsChecked = current.PinToDesktop;
         ClickThroughCheckBox.IsChecked = current.ClickThrough;
@@ -41,6 +54,7 @@ public partial class SettingsWindow : Window
             PinToDesktop = PinToDesktopCheckBox.IsChecked ?? true,
             ClickThrough = ClickThroughCheckBox.IsChecked ?? false,
             MonthCount = MonthCountComboBox.SelectedItem as int? ?? 1,
+            MonthLayoutDirection = LayoutDirectionComboBox.SelectedValue as string ?? _original.MonthLayoutDirection,
         };
 
         _startupService.SetEnabled(LaunchAtStartupCheckBox.IsChecked ?? false);
@@ -63,5 +77,6 @@ public partial class SettingsWindow : Window
         PinToDesktop = source.PinToDesktop,
         ClickThrough = source.ClickThrough,
         MonthCount = source.MonthCount,
+        MonthLayoutDirection = source.MonthLayoutDirection,
     };
 }

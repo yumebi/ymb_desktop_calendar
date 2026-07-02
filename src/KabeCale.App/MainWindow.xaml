@@ -54,9 +54,9 @@
                 </Grid>
             </Border>
 
-            <!-- 月パネル(1〜3ヶ月分を横並び表示、ウィンドウ幅に追従して伸縮) -->
-            <UniformGrid x:Name="MonthsHost" Grid.Row="1" Rows="1"
-                         HorizontalAlignment="Stretch" Margin="4"/>
+            <!-- 月パネル(1〜3ヶ月分を横または縦に表示、ウィンドウサイズに追従して伸縮) -->
+            <UniformGrid x:Name="MonthsHost" Grid.Row="1"
+                         HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="4"/>
         </Grid>
     </Border>
 </Window>

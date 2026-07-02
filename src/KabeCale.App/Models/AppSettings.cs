@@ -10,4 +10,5 @@ public class AppSettings
     public bool PinToDesktop { get; set; } = false;
     public bool ClickThrough { get; set; } = false;
     public int MonthCount { get; set; } = 1;
+    public string MonthLayoutDirection { get; set; } = "Horizontal";
 }
