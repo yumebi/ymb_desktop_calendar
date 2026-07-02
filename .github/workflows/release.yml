@@ -23,7 +23,11 @@ jobs:
         id: version
         shell: pwsh
         run: |
-          $version = "1.0.${{ github.run_number }}"
+          # push毎にrun_numberを10進カウンタとして扱う: 1→0.1, 9→0.9, 10→1.0, 11→1.1 ...
+          $runNumber = [int]"${{ github.run_number }}"
+          $major = [math]::Floor($runNumber / 10)
+          $minor = $runNumber % 10
+          $version = "$major.$minor"
           echo "version=$version" >> $env:GITHUB_OUTPUT
 
       - name: Publish self-contained build
