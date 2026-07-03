@@ -107,7 +107,12 @@ public partial class MainWindow : Window
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
         SetupTrayIcon();
-        _ = RenderMonthsAsync();
+
+        // Loaded直後はウィンドウがまだ初回レイアウト/描画パスを終えておらず、新規追加した
+        // MonthPanel(UserControl)からFindResourceでテーマブラシを解決できずに失敗することが
+        // あるため、その完了を待つDispatcherPriority.Loadedまで初回描画を遅延させる。
+        Dispatcher.BeginInvoke(new Action(() => { _ = RenderMonthsAsync(); }), DispatcherPriority.Loaded);
+
         _ = CheckForUpdateOnStartupAsync();
         _ = Task.Run(() => _backupService.RunBackup());
 
