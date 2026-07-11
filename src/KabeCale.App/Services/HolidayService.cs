@@ -10,7 +10,6 @@ public class HolidayService
     private static readonly TimeSpan CacheLifetime = TimeSpan.FromDays(7);
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
-    private readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(10) };
     private readonly Dictionary<int, Dictionary<string, string>> _memoryCache = new();
 
     private class CacheEnvelope
@@ -48,7 +47,7 @@ public class HolidayService
         try
         {
             var url = string.Format(ApiUrlTemplate, year);
-            var json = await _httpClient.GetStringAsync(url, ct);
+            var json = await SharedHttpClient.Instance.GetStringAsync(url, ct);
             return JsonSerializer.Deserialize<Dictionary<string, string>>(json);
         }
         catch

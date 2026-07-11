@@ -11,19 +11,18 @@ public class UpdateService
 {
     private const string ReleasesApiUrl = "https://api.github.com/repos/yumebi/ymb_desktop_calendar/releases/latest";
 
-    private readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(10) };
-
-    public UpdateService()
-    {
-        _httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("YmbDesktopCalendar", "1.0"));
-        _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
-    }
-
     public async Task<UpdateCheckResult> CheckForUpdateAsync(CancellationToken ct = default)
     {
         try
         {
-            var json = await _httpClient.GetStringAsync(ReleasesApiUrl, ct);
+            using var request = new HttpRequestMessage(HttpMethod.Get, ReleasesApiUrl);
+            request.Headers.UserAgent.Add(new ProductInfoHeaderValue("YmbDesktopCalendar", "1.0"));
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
+
+            using var response = await SharedHttpClient.Instance.SendAsync(request, ct);
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync(ct);
+
             using var doc = JsonDocument.Parse(json);
             var tagName = doc.RootElement.TryGetProperty("tag_name", out var tagProp) ? tagProp.GetString() : null;
             var htmlUrl = doc.RootElement.TryGetProperty("html_url", out var urlProp) ? urlProp.GetString() : null;

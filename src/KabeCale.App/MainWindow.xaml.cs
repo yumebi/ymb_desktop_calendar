@@ -32,6 +32,7 @@ public partial class MainWindow : Window
     private System.Windows.Forms.ToolStripMenuItem? _clickThroughMenuItem;
     private DispatcherTimer? _savePositionTimer;
     private readonly DispatcherTimer _memoryTrimTimer = new() { Interval = TimeSpan.FromMinutes(15) };
+    private DispatcherTimer? _renderIdleTrimTimer;
     private string? _pendingReleaseUrl;
     private bool _allowClose;
 
@@ -276,6 +277,28 @@ public partial class MainWindow : Window
             renderTasks.Add(panel.RenderAsync(month, _holidayService, _memoService, _eventService, OnDayCellClicked, _settings));
         }
         await Task.WhenAll(renderTasks);
+
+        ScheduleIdleTrimAfterRender();
+    }
+
+    /// <summary>
+    /// 月移動や設定変更で発生したガーベジを、操作が落ち着いた数秒後にまとめて回収する。
+    /// 毎回律儀にトリムするとページフォルトでCPU負荷が上がるため、連続操作中はデバウンスする。
+    /// </summary>
+    private void ScheduleIdleTrimAfterRender()
+    {
+        if (_renderIdleTrimTimer is null)
+        {
+            _renderIdleTrimTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
+            _renderIdleTrimTimer.Tick += (_, _) =>
+            {
+                _renderIdleTrimTimer!.Stop();
+                MemoryTrimmer.TrimNow();
+            };
+        }
+
+        _renderIdleTrimTimer.Stop();
+        _renderIdleTrimTimer.Start();
     }
 
     private void OnDayCellClicked(DateTime date)

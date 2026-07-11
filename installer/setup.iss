@@ -52,3 +52,33 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#MyAppName}}"; Flags: nowait postinstall skipifsilent
+
+[Code]
+{ フレームワーク依存配布のため、.NET 10 Desktop Runtime (x64)が入っていないと起動できない。
+  共有ランタイムのフォルダ存在だけを見る簡易チェック(誤検知でブロックしないよう非致命)。 }
+function IsDotNet10DesktopRuntimeInstalled(): Boolean;
+var
+  FindRec: TFindRec;
+  BasePath: string;
+begin
+  Result := False;
+  BasePath := ExpandConstant('{commonpf64}\dotnet\shared\Microsoft.WindowsDesktop.App');
+  if FindFirst(BasePath + '\10.*', FindRec) then
+  begin
+    Result := True;
+    FindClose(FindRec);
+  end;
+end;
+
+function InitializeSetup(): Boolean;
+begin
+  Result := True;
+  if not IsDotNet10DesktopRuntimeInstalled() then
+  begin
+    if MsgBox('このアプリの実行には .NET 10 Desktop Runtime (x64) が必要です。' + #13#10 +
+       '未インストールの場合はインストール後に起動してください。' + #13#10#13#10 +
+       'https://dotnet.microsoft.com/download/dotnet/10.0' + #13#10#13#10 +
+       'このままセットアップを続けますか?', mbConfirmation, MB_YESNO) = IDNO then
+      Result := False;
+  end;
+end;

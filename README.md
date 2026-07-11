@@ -53,8 +53,11 @@ dotnet run
 ## ダウンロード
 
 ビルド不要で使う場合は [Releases](https://github.com/yumebi/ymb_desktop_calendar/releases/latest) から
-`YmbDesktopCalendar-Setup-<version>.exe` をダウンロードして実行するだけでインストールできる
-(self-contained、.NETランタイム別途インストール不要)。
+`YmbDesktopCalendar-Setup-<version>.exe` をダウンロードして実行するだけでインストールできる。
+
+> **要件**: フレームワーク依存配布のため、[.NET 10 Desktop Runtime (x64)](https://dotnet.microsoft.com/download/dotnet/10.0)
+> が別途必要。常駐時のメモリ使用量を抑えるためself-contained配布からフレームワーク依存配布に変更した
+> (自己完結配布はランタイムを専有するため)。未インストールの場合はインストーラー起動時に案内が出る。
 
 > **注意**: このインストーラーはコード署名されていません。ダウンロード・実行時に
 > Windows SmartScreenが「不明な発行元」として警告を表示する場合があります。

@@ -26,6 +26,14 @@ public partial class MonthPanel : UserControl
     /// <summary>曜日×週序数ルールから休日(公休日/私休日)を判定するサービス。</summary>
     private readonly RestDayService _restDayService = new();
 
+    /// <summary>
+    /// 42個の日付セル(常に同じGrid位置)を初回のみ生成して再利用する。月移動や設定変更の
+    /// たびにBorder/StackPanelを作り直すとGC負荷が増えるため、内容だけ都度更新する。
+    /// </summary>
+    private readonly Border[] _dayCells = new Border[42];
+    private readonly TextBlock[] _weekNumberTexts = new TextBlock[6];
+    private Action<DateTime>? _onDayClicked;
+
     public MonthPanel()
     {
         InitializeComponent();
@@ -34,6 +42,7 @@ public partial class MonthPanel : UserControl
     public async Task RenderAsync(DateTime month, HolidayService holidayService, MemoService memoService, EventService eventService, Action<DateTime> onDayClicked, AppSettings settings)
     {
         _settings = settings;
+        _onDayClicked = onDayClicked;
 
         var startDow = settings.FirstDayOfWeek == "Monday" ? DayOfWeek.Monday : DayOfWeek.Sunday;
         BuildWeekdayHeader(startDow, settings.ShowWeekNumbers);
@@ -53,7 +62,7 @@ public partial class MonthPanel : UserControl
         foreach (var year in years)
             holidayMaps[year] = await holidayService.GetHolidaysAsync(year);
 
-        DaysGrid.Children.Clear();
+        EnsureDayCellsBuilt();
         WeekNumberColumn.Width = new GridLength(settings.ShowWeekNumbers ? 24 : 0);
 
         for (var i = 0; i < 42; i++)
@@ -64,25 +73,61 @@ public partial class MonthPanel : UserControl
                 ? name
                 : null;
 
-            var cell = BuildDayCell(date, month.Month, holidayName, memoService.Get(dateOnly), eventService.Get(dateOnly), onDayClicked);
-            Grid.SetRow(cell, i / 7);
-            Grid.SetColumn(cell, i % 7 + 1);
-            DaysGrid.Children.Add(cell);
+            UpdateDayCell(_dayCells[i], date, month.Month, holidayName, memoService.Get(dateOnly), eventService.Get(dateOnly));
 
-            if (settings.ShowWeekNumbers && i % 7 == 0)
+            if (i % 7 == 0)
             {
-                var weekText = new TextBlock
+                var weekText = _weekNumberTexts[i / 7];
+                weekText.Visibility = settings.ShowWeekNumbers ? Visibility.Visible : Visibility.Collapsed;
+                if (settings.ShowWeekNumbers)
                 {
-                    Text = ISOWeek.GetWeekOfYear(date).ToString(),
-                    FontSize = 9 * settings.FontScale,
-                    Foreground = (Brush)FindResource("CalOtherMonthBrush"),
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                };
-                Grid.SetRow(weekText, i / 7);
-                Grid.SetColumn(weekText, 0);
-                DaysGrid.Children.Add(weekText);
+                    weekText.Text = ISOWeek.GetWeekOfYear(date).ToString();
+                    weekText.FontSize = 9 * settings.FontScale;
+                    weekText.Foreground = (Brush)FindResource("CalOtherMonthBrush");
+                }
             }
+        }
+    }
+
+    /// <summary>日付セル・週番号セルの入れ物を初回のみ生成し、DaysGridに固定位置で配置する。</summary>
+    private void EnsureDayCellsBuilt()
+    {
+        if (_dayCells[0] is not null)
+            return;
+
+        for (var i = 0; i < 42; i++)
+        {
+            var stack = new StackPanel { Margin = new Thickness(2) };
+            var border = new Border
+            {
+                Child = stack,
+                CornerRadius = new CornerRadius(4),
+                BorderThickness = new Thickness(0.5),
+                Cursor = Cursors.Hand,
+            };
+            border.MouseLeftButtonUp += (sender, _) =>
+            {
+                if (((Border)sender).Tag is DateTime date)
+                    _onDayClicked?.Invoke(date);
+            };
+
+            Grid.SetRow(border, i / 7);
+            Grid.SetColumn(border, i % 7 + 1);
+            DaysGrid.Children.Add(border);
+            _dayCells[i] = border;
+        }
+
+        for (var i = 0; i < 6; i++)
+        {
+            var weekText = new TextBlock
+            {
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            Grid.SetRow(weekText, i);
+            Grid.SetColumn(weekText, 0);
+            DaysGrid.Children.Add(weekText);
+            _weekNumberTexts[i] = weekText;
         }
     }
 
@@ -122,7 +167,7 @@ public partial class MonthPanel : UserControl
         }
     }
 
-    private Border BuildDayCell(DateTime date, int displayedMonth, string? holidayName, string memo, IReadOnlyList<CalendarEvent> events, Action<DateTime> onDayClicked)
+    private void UpdateDayCell(Border border, DateTime date, int displayedMonth, string? holidayName, string memo, IReadOnlyList<CalendarEvent> events)
     {
         var isOtherMonth = date.Month != displayedMonth;
         var isToday = date.Date == DateTime.Today;
@@ -145,7 +190,8 @@ public partial class MonthPanel : UserControl
         if (isOtherMonth)
             dayBrush = (Brush)FindResource("CalOtherMonthBrush");
 
-        var stack = new StackPanel { Margin = new Thickness(2) };
+        var stack = (StackPanel)border.Child;
+        stack.Children.Clear();
         stack.Children.Add(new TextBlock
         {
             Text = date.Day.ToString(),
@@ -203,19 +249,10 @@ public partial class MonthPanel : UserControl
             });
         }
 
-        var border = new Border
-        {
-            Child = stack,
-            Background = isToday ? (Brush)FindResource("CalTodayBrush") : Brushes.Transparent,
-            BorderBrush = (Brush)FindResource("CalGridLineBrush"),
-            BorderThickness = new Thickness(0.5),
-            CornerRadius = new CornerRadius(4),
-            Cursor = Cursors.Hand,
-            ToolTip = BuildToolTip(date, holidayName, restDayType, memo, sortedEvents),
-        };
-        border.MouseLeftButtonUp += (_, _) => onDayClicked(date);
-
-        return border;
+        border.Tag = date;
+        border.Background = isToday ? (Brush)FindResource("CalTodayBrush") : Brushes.Transparent;
+        border.BorderBrush = (Brush)FindResource("CalGridLineBrush");
+        border.ToolTip = BuildToolTip(date, holidayName, restDayType, memo, sortedEvents);
     }
 
     /// <summary>時刻付きの予定を時刻順に先へ、時刻なしはその後ろに並べる。</summary>
