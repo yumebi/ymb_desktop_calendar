@@ -15,6 +15,10 @@
     <Product>YMBデスクトップカレンダー</Product>
     <AssemblyTitle>YMBデスクトップカレンダー</AssemblyTitle>
     <Company>yumebi</Company>
+    <!-- 常駐ウィジェットとしてワーキングセットを抑える(ServerGCはスループット優先でメモリを多く使う) -->
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+    <TieredPGO>true</TieredPGO>
   </PropertyGroup>
 
   <ItemGroup>

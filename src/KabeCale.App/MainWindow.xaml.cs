@@ -31,6 +31,7 @@ public partial class MainWindow : Window
     private NotifyIcon? _trayIcon;
     private System.Windows.Forms.ToolStripMenuItem? _clickThroughMenuItem;
     private DispatcherTimer? _savePositionTimer;
+    private readonly DispatcherTimer _memoryTrimTimer = new() { Interval = TimeSpan.FromMinutes(15) };
     private string? _pendingReleaseUrl;
     private bool _allowClose;
 
@@ -111,13 +112,24 @@ public partial class MainWindow : Window
         // Loaded直後はウィンドウがまだ初回レイアウト/描画パスを終えておらず、新規追加した
         // MonthPanel(UserControl)からFindResourceでテーマブラシを解決できずに失敗することが
         // あるため、その完了を待つDispatcherPriority.Loadedまで初回描画を遅延させる。
-        Dispatcher.BeginInvoke(new Action(() => { _ = RenderMonthsAsync(); }), DispatcherPriority.Loaded);
+        Dispatcher.BeginInvoke(new Action(() => { _ = RenderInitialMonthsAndTrimAsync(); }), DispatcherPriority.Loaded);
 
         _ = CheckForUpdateOnStartupAsync();
         _ = Task.Run(() => _backupService.RunBackup());
 
         LocationChanged += (_, _) => ScheduleSaveWindowPosition();
         SizeChanged += (_, _) => ScheduleSaveWindowPosition();
+
+        // 常駐アプリなので、一定時間ごとにアイドル時のメモリ使用量を抑える。
+        _memoryTrimTimer.Tick += (_, _) => MemoryTrimmer.TrimNow();
+        _memoryTrimTimer.Start();
+    }
+
+    private async Task RenderInitialMonthsAndTrimAsync()
+    {
+        await RenderMonthsAsync();
+        // 起動時の描画で確保したガーベジを早めに回収し、アイドル時のワーキングセットを抑える。
+        _ = Dispatcher.BeginInvoke(new Action(MemoryTrimmer.TrimNow), DispatcherPriority.ApplicationIdle);
     }
 
     /// <summary>
@@ -447,9 +459,14 @@ public partial class MainWindow : Window
     private void ToggleVisibility()
     {
         if (IsVisible)
+        {
             Hide();
+            MemoryTrimmer.TrimNow();
+        }
         else
+        {
             Show();
+        }
     }
 
     private void ExitApplication()
