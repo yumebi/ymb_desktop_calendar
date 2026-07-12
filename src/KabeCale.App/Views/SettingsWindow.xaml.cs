@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Windows;
 using KabeCale.App.Models;
 using KabeCale.App.Services;
@@ -76,6 +77,9 @@ public partial class SettingsWindow : Window
         _restDayRules = current.RestDayRules
             .Select(r => new RestDayRule(r.DayOfWeek, r.WeekOfMonth, r.Type))
             .ToList();
+
+        var version = Assembly.GetExecutingAssembly().GetName().Version;
+        VersionText.Text = version is null ? string.Empty : $"v{version.Major}.{version.Minor}.{version.Build}";
 
         ResultSettings = Clone(current);
     }

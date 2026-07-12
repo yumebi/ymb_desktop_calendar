@@ -80,9 +80,20 @@
         <Button x:Name="RestDaySettingsButton" Grid.Row="17" Content="休日設定..." Height="26"
                 HorizontalAlignment="Stretch" VerticalAlignment="Top" Click="RestDaySettingsButton_Click"/>
 
-        <StackPanel Grid.Row="18" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="OK" Width="70" Margin="0,0,6,0" Click="OkButton_Click" IsDefault="True"/>
-            <Button Content="キャンセル" Width="70" Click="CancelButton_Click" IsCancel="True"/>
-        </StackPanel>
+        <Grid Grid.Row="18">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock x:Name="VersionText" Grid.Column="0"
+                       VerticalAlignment="Center" FontSize="10" Opacity="0.6"
+                       Foreground="{DynamicResource CalForegroundBrush}"/>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="OK" Width="70" Margin="0,0,6,0" Click="OkButton_Click" IsDefault="True"/>
+                <Button Content="キャンセル" Width="70" Click="CancelButton_Click" IsCancel="True"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>
