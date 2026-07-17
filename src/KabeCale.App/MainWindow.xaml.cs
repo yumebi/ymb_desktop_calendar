@@ -33,6 +33,8 @@ public partial class MainWindow : Window
     private DispatcherTimer? _savePositionTimer;
     private readonly DispatcherTimer _memoryTrimTimer = new() { Interval = TimeSpan.FromMinutes(15) };
     private DispatcherTimer? _renderIdleTrimTimer;
+    private readonly DispatcherTimer _dateRolloverTimer = new() { Interval = TimeSpan.FromMinutes(1) };
+    private DateTime _lastRenderedDate = DateTime.MinValue;
     private string? _pendingReleaseUrl;
     private bool _allowClose;
 
@@ -124,6 +126,17 @@ public partial class MainWindow : Window
         // 常駐アプリなので、一定時間ごとにアイドル時のメモリ使用量を抑える。
         _memoryTrimTimer.Tick += (_, _) => MemoryTrimmer.TrimNow();
         _memoryTrimTimer.Start();
+
+        // 0時をまたいでも「今日」のハイライトが自動で更新されるよう、日付が変わったか
+        // 1分おきにチェックする(スリープ復帰後も次のTickで追いつく)。
+        _dateRolloverTimer.Tick += (_, _) => RefreshIfDateChanged();
+        _dateRolloverTimer.Start();
+    }
+
+    private void RefreshIfDateChanged()
+    {
+        if (DateTime.Today != _lastRenderedDate)
+            _ = RenderMonthsAsync();
     }
 
     private async Task RenderInitialMonthsAndTrimAsync()
@@ -278,6 +291,7 @@ public partial class MainWindow : Window
         }
         await Task.WhenAll(renderTasks);
 
+        _lastRenderedDate = DateTime.Today;
         ScheduleIdleTrimAfterRender();
     }
 
@@ -489,6 +503,7 @@ public partial class MainWindow : Window
         else
         {
             Show();
+            RefreshIfDateChanged();
         }
     }
 
