@@ -465,6 +465,7 @@ public partial class MainWindow : Window
             Text = "YMBデスクトップカレンダー",
         };
 
+        // 並びはYMB共通: 表示切替 → アプリ固有項目 → 区切り → 更新を確認 → 区切り → 終了
         var menu = new System.Windows.Forms.ContextMenuStrip();
         menu.Items.Add("表示/非表示", null, (_, _) => ToggleVisibility());
         _clickThroughMenuItem = new System.Windows.Forms.ToolStripMenuItem(
@@ -473,7 +474,9 @@ public partial class MainWindow : Window
             Checked = _settings.ClickThrough,
         };
         menu.Items.Add(_clickThroughMenuItem);
+        menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
         menu.Items.Add("更新を確認", null, (_, _) => CheckForUpdateFromTray());
+        menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
         menu.Items.Add("終了", null, (_, _) => ExitApplication());
         _trayIcon.ContextMenuStrip = menu;
         _trayIcon.DoubleClick += (_, _) => ToggleVisibility();
