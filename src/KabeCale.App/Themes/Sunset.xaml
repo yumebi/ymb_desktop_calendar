@@ -13,4 +13,25 @@
     <SolidColorBrush x:Key="CalTodayBrush" Color="#4DF2A65A"/>
     <SolidColorBrush x:Key="CalOtherMonthBrush" Color="#66C79A7A"/>
 
+    <!-- YMB共通トークン。共通の Button / ToolTip スタイルがここを DynamicResource で引く。
+         テーマ切替と同時にボタンの色も追従させたいので、テーマ辞書ごとに持つ。
+         アクセントはこのテーマの CalHeaderBrush と対のヘッダー文字色をそのまま使う。 -->
+    <SolidColorBrush x:Key="YmbAccentBrush" Color="#FFE07A3F"/>
+    <SolidColorBrush x:Key="YmbAccentHoverBrush" Color="#FFEB8C52"/>
+    <SolidColorBrush x:Key="YmbAccentFgBrush" Color="#FFFFFFFF"/>
+
+    <SolidColorBrush x:Key="YmbFgBrush" Color="#FF4A2E1F"/>
+    <SolidColorBrush x:Key="YmbFgDimBrush" Color="#FF7A5A45"/>
+    <SolidColorBrush x:Key="YmbFgMutedBrush" Color="#FFC79A7A"/>
+
+    <SolidColorBrush x:Key="YmbSurfaceBrush" Color="#FFFFF3E8"/>
+    <SolidColorBrush x:Key="YmbSurfaceAltBrush" Color="#FFF7E6D6"/>
+    <SolidColorBrush x:Key="YmbBorderBrush" Color="#FFE8C9AC"/>
+    <SolidColorBrush x:Key="YmbBorderSoftBrush" Color="#FFF2DECB"/>
+    <SolidColorBrush x:Key="YmbRowHoverBrush" Color="#FFF8E9DB"/>
+
+    <SolidColorBrush x:Key="YmbDangerBrush" Color="#FFD1495B"/>
+    <SolidColorBrush x:Key="YmbOverlayHoverBrush" Color="#14000000"/>
+    <SolidColorBrush x:Key="YmbOverlayPressBrush" Color="#22000000"/>
+
 </ResourceDictionary>

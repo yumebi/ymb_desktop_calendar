@@ -12,8 +12,12 @@ public class ThemeService
         var uri = new Uri($"Themes/{name}.xaml", UriKind.Relative);
         var dict = new ResourceDictionary { Source = uri };
 
+        // 差し替え対象は配色テーマの辞書だけに限定する。
+        // "Themes/" で始まるものを一括で外すと、同じフォルダにある
+        // YMB共通トークン(Themes/YmbTypography.xaml)まで巻き込んで消えてしまう。
         var merged = Application.Current.Resources.MergedDictionaries;
-        var existing = merged.FirstOrDefault(d => d.Source?.OriginalString.StartsWith("Themes/") == true);
+        var existing = merged.FirstOrDefault(d =>
+            AvailableThemes.Any(t => d.Source?.OriginalString == $"Themes/{t}.xaml"));
         if (existing is not null)
             merged.Remove(existing);
 

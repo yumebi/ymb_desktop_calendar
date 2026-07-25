@@ -4,6 +4,19 @@
              xmlns:local="clr-namespace:KabeCale.App"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- YMB共通トークンと共通コントロール。値の正本は ymb-ui 側。 -->
+                <ResourceDictionary Source="Themes/YmbTheme.xaml" />
+
+                <!-- Ymb* の面色の土台。
+                     このアプリの配色テーマ(Themes/Light.xaml 等)は Ymb* を自前で
+                     上書きするが、それを載せるのは ThemeService で、実行時の
+                     OnSourceInitialized まで走らない。それまでの間に描画される分で
+                     ブラシが未解決(透明)にならないよう、既定値をここで敷いておく。
+                     アクセントもテーマ側が上書きするので、共通の赤は表に出ない。 -->
+                <ResourceDictionary Source="Themes/YmbTheme.Light.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

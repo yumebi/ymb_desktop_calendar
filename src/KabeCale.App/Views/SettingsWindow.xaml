@@ -72,13 +72,17 @@
         <CheckBox x:Name="LaunchAtStartupCheckBox" Grid.Row="15" Content="Windows起動時に自動起動" Margin="0,0,0,8"
                   Foreground="{DynamicResource CalForegroundBrush}"/>
 
+        <!-- 補助操作なので枠線のみ。塗りはこのダイアログの主要操作(OK)だけに使う。 -->
         <StackPanel Grid.Row="16" Orientation="Horizontal" Margin="0,0,0,8">
-            <Button Content="エクスポート" Width="90" Margin="0,0,6,0" Click="ExportButton_Click"/>
-            <Button Content="インポート" Width="90" Click="ImportButton_Click"/>
+            <Button Content="エクスポート" Width="90" Margin="0,0,6,0"
+                    Style="{StaticResource YmbSecondaryButton}" Click="ExportButton_Click"/>
+            <Button Content="インポート" Width="90"
+                    Style="{StaticResource YmbSecondaryButton}" Click="ImportButton_Click"/>
         </StackPanel>
 
         <Button x:Name="RestDaySettingsButton" Grid.Row="17" Content="休日設定..." Height="26"
-                HorizontalAlignment="Stretch" VerticalAlignment="Top" Click="RestDaySettingsButton_Click"/>
+                HorizontalAlignment="Stretch" VerticalAlignment="Top"
+                Style="{StaticResource YmbSecondaryButton}" Click="RestDaySettingsButton_Click"/>
 
         <Grid Grid.Row="18">
             <Grid.ColumnDefinitions>
@@ -92,7 +96,8 @@
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="OK" Width="70" Margin="0,0,6,0" Click="OkButton_Click" IsDefault="True"/>
-                <Button Content="キャンセル" Width="70" Click="CancelButton_Click" IsCancel="True"/>
+                <Button Content="キャンセル" Width="70"
+                        Style="{StaticResource YmbSecondaryButton}" Click="CancelButton_Click" IsCancel="True"/>
             </StackPanel>
         </Grid>
     </Grid>
