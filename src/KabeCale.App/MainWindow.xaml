@@ -36,6 +36,7 @@
                     </Grid.ColumnDefinitions>
 
                     <Button x:Name="PrevMonthButton" Grid.Column="0" Content="◀" Width="24" Height="24"
+                            Style="{StaticResource YmbIconButton}"
                             Click="PrevMonth_Click" Background="Transparent" BorderThickness="0"
                             Foreground="{DynamicResource CalHeaderForegroundBrush}"/>
 
@@ -46,6 +47,7 @@
                                    Foreground="{DynamicResource CalHeaderForegroundBrush}"/>
 
                         <Button x:Name="TodayButton" Content="今日" Margin="8,0,0,0"
+                                Style="{StaticResource YmbSecondaryButton}"
                                 Padding="6,1" FontSize="10" Click="TodayButton_Click"
                                 Background="Transparent" BorderThickness="1"
                                 BorderBrush="{DynamicResource CalHeaderForegroundBrush}"
@@ -53,10 +55,12 @@
                     </StackPanel>
 
                     <Button x:Name="NextMonthButton" Grid.Column="2" Content="▶" Width="24" Height="24"
+                            Style="{StaticResource YmbIconButton}"
                             Click="NextMonth_Click" Background="Transparent" BorderThickness="0"
                             Foreground="{DynamicResource CalHeaderForegroundBrush}"/>
 
                     <Button x:Name="SettingsButtonElement" Grid.Column="3" Content="⚙" Width="24" Height="24" Margin="6,0,0,0"
+                            Style="{StaticResource YmbIconButton}"
                             Click="SettingsButton_Click" Background="Transparent" BorderThickness="0"
                             Foreground="{DynamicResource CalHeaderForegroundBrush}"/>
                 </Grid>
