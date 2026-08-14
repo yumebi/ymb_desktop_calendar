@@ -428,13 +428,24 @@ public partial class MainWindow : Window
         }
 
         var hwnd = new WindowInteropHelper(this).Handle;
-        if (pinChanged && _settings.PinToDesktop && !DesktopPin.Pin(hwnd))
+        if (pinChanged)
         {
-            _settings.PinToDesktop = false;
-            _settingsService.Save(_settings);
-            MessageBox.Show(this,
-                "このPCではデスクトップへの常駐に対応していませんでした。通常ウィンドウとして表示します。",
-                "YMBデスクトップカレンダー", MessageBoxButton.OK, MessageBoxImage.Warning);
+            if (_settings.PinToDesktop)
+            {
+                if (!DesktopPin.Pin(hwnd))
+                {
+                    _settings.PinToDesktop = false;
+                    _settingsService.Save(_settings);
+                    MessageBox.Show(this,
+                        "このPCではデスクトップへの常駐に対応していませんでした。通常ウィンドウとして表示します。",
+                        "YMBデスクトップカレンダー", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            else
+            {
+                // 固定を解除した場合はWorkerWの親子関係を外して通常ウィンドウに戻す
+                DesktopPin.Unpin(hwnd);
+            }
         }
         if (clickThroughChanged)
         {

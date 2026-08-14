@@ -70,6 +70,13 @@ public static class DesktopPin
         return true;
     }
 
+    /// <summary>デスクトップへの固定を解除し、通常のデスクトップウィンドウに戻す。</summary>
+    public static void Unpin(IntPtr windowHandle)
+    {
+        // 親を元のデスクトップ(IntPtr.Zero = ルート)に戻すことで固定を解除する。
+        SetParent(windowHandle, IntPtr.Zero);
+    }
+
     /// <summary>クリックをそのまま背後(デスクトップ)へ透過させる。</summary>
     public static void SetClickThrough(IntPtr windowHandle, bool enabled)
     {
