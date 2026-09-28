@@ -231,13 +231,13 @@ public partial class MainWindow : Window
 
     private void OpenReleasePage()
     {
-        if (_pendingReleaseUrl is null)
-            return;
-
-        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(_pendingReleaseUrl)
+        if (_pendingReleaseUrl is { } url && SecurityLimits.IsAllowedReleaseUrl(url))
         {
-            UseShellExecute = true,
-        });
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url)
+            {
+                UseShellExecute = true,
+            });
+        }
     }
 
     /// <summary>
