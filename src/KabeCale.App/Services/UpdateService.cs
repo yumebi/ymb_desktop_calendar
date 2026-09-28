@@ -34,7 +34,8 @@ public class UpdateService
             var currentVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0);
 
             var hasUpdate = latestVersion is not null && latestVersion > currentVersion;
-            return new UpdateCheckResult(hasUpdate, tagName, htmlUrl);
+            string? releaseUrl = SecurityLimits.IsAllowedReleaseUrl(htmlUrl) ? htmlUrl : null;
+            return new UpdateCheckResult(hasUpdate, tagName, releaseUrl);
         }
         catch
         {
