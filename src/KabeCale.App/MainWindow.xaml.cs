@@ -485,6 +485,7 @@ public partial class MainWindow : Window
             Checked = _settings.ClickThrough,
         };
         menu.Items.Add(_clickThroughMenuItem);
+        menu.Items.Add("ウインドウ位置をリセット", null, (_, _) => ResetWindowPosition());
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
         menu.Items.Add("更新を確認", null, (_, _) => CheckForUpdateFromTray());
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
@@ -492,6 +493,23 @@ public partial class MainWindow : Window
         _trayIcon.ContextMenuStrip = menu;
         _trayIcon.DoubleClick += (_, _) => ToggleVisibility();
         _trayIcon.BalloonTipClicked += (_, _) => OpenReleasePage();
+    }
+
+    /// <summary>
+    /// ウインドウを既定の位置と大きさに戻す(トレイのメニューから)。位置の補正が効かない状況の最終手段。
+    /// 非表示(トレイ格納)なら表示する。
+    /// </summary>
+    private void ResetWindowPosition()
+    {
+        var defaults = new AppSettings();
+        Left = defaults.WindowLeft;
+        Top = defaults.WindowTop;
+        Width = defaults.WindowWidth;
+        Height = defaults.WindowHeight;
+        EnsureWindowIsOnScreen();   // 既定位置が画面外になる環境でも、画面内に収める
+        if (!IsVisible) Show();
+        Activate();
+        SaveWindowPosition();
     }
 
     private void ToggleClickThroughFromTray()
