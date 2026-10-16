@@ -11,7 +11,8 @@ namespace KabeCale.App;
 /// </summary>
 public partial class App : Application
 {
-    private const string SingleInstanceMutexName = "YmbDesktopCalendar_SingleInstance";
+    // 保存先を環境変数で切り替えている場合(動作確認用)は、本番の起動と二重起動扱いにならないよう名前を分ける。
+    private static readonly string SingleInstanceMutexName = "YmbDesktopCalendar_SingleInstance" + DataDirSuffix();
     private const string MainWindowTitle = "YMBデスクトップカレンダー";
 
     private Mutex? _singleInstanceMutex;
@@ -34,6 +35,14 @@ public partial class App : Application
         }
 
         base.OnStartup(e);
+    }
+
+    private static string DataDirSuffix()
+    {
+        var dir = Environment.GetEnvironmentVariable(Services.AppPaths.DataDirEnvVar);
+        if (string.IsNullOrWhiteSpace(dir)) return "";
+        var hash = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(dir.ToLowerInvariant()));
+        return "_" + Convert.ToHexString(hash)[..12];
     }
 
     protected override void OnExit(ExitEventArgs e)

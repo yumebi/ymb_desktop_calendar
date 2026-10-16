@@ -74,25 +74,25 @@ public partial class MainWindow : Window
 
     /// <summary>
     /// 保存された位置が現在のモニタ構成では画面外になる場合(外付けモニタを外した等)、
-    /// プライマリモニタ内に位置を戻す。
+    /// 画面内に引き戻す。WPF の Left/Top/Width/Height は DIP、モニタの作業領域は物理ピクセルなので、
+    /// 換算してから比較する(換算しないと拡大表示の画面で画面内外を取り違える)。
+    /// 画面内に十分見えていれば(モニタをまたぐ配置を含めて)そのままにする。
     /// </summary>
     private void EnsureWindowIsOnScreen()
     {
-        var windowRect = new System.Drawing.Rectangle(
-            (int)Left, (int)Top, (int)Math.Max(Width, 50), (int)Math.Max(Height, 50));
+        var scale = VisualTreeHelper.GetDpi(this).DpiScaleX;
+        var current = new PxRect(
+            (int)Math.Round(Left * scale), (int)Math.Round(Top * scale),
+            (int)Math.Round(Width * scale), (int)Math.Round(Height * scale));
+        if (current.Width <= 0 || current.Height <= 0) return;
 
-        var isVisible = System.Windows.Forms.Screen.AllScreens.Any(screen =>
-        {
-            var overlap = System.Drawing.Rectangle.Intersect(screen.WorkingArea, windowRect);
-            return overlap.Width > 50 && overlap.Height > 50;
-        });
+        var fitted = WindowPlacementMath.Fit(current, MonitorWorkAreas.Enumerate(), 0, 0);
+        if (fitted == current) return;
 
-        if (isVisible)
-            return;
-
-        var workArea = System.Windows.Forms.Screen.PrimaryScreen!.WorkingArea;
-        Left = workArea.Left + 40;
-        Top = workArea.Top + 40;
+        Left = fitted.X / scale;
+        Top = fitted.Y / scale;
+        Width = fitted.Width / scale;
+        Height = fitted.Height / scale;
     }
 
     /// <summary>
