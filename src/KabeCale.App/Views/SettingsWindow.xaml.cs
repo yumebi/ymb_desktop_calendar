@@ -38,6 +38,7 @@ public partial class SettingsWindow : Window
 
     private readonly AppSettings _original;
     private readonly StartupService _startupService = new();
+    private readonly bool _launchAtStartupOriginal;
     private List<RestDayRule> _restDayRules;
 
     public SettingsWindow(AppSettings current)
@@ -72,7 +73,8 @@ public partial class SettingsWindow : Window
         ShowWeekNumbersCheckBox.IsChecked = current.ShowWeekNumbers;
         PinToDesktopCheckBox.IsChecked = current.PinToDesktop;
         ClickThroughCheckBox.IsChecked = current.ClickThrough;
-        LaunchAtStartupCheckBox.IsChecked = _startupService.IsEnabled();
+        _launchAtStartupOriginal = _startupService.IsEnabled();
+        LaunchAtStartupCheckBox.IsChecked = _launchAtStartupOriginal;
 
         _restDayRules = current.RestDayRules
             .Select(r => new RestDayRule(r.DayOfWeek, r.WeekOfMonth, r.Type))
@@ -124,7 +126,9 @@ public partial class SettingsWindow : Window
             RestDayRules = _restDayRules,
         };
 
-        _startupService.SetEnabled(LaunchAtStartupCheckBox.IsChecked ?? false);
+        var launchAtStartup = LaunchAtStartupCheckBox.IsChecked ?? false;
+        if (launchAtStartup != _launchAtStartupOriginal)
+            _startupService.SetEnabled(launchAtStartup);
 
         DialogResult = true;
     }

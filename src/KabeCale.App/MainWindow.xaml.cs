@@ -119,6 +119,7 @@ public partial class MainWindow : Window
 
         _ = CheckForUpdateOnStartupAsync();
         _ = Task.Run(() => _backupService.RunBackup());
+        _ = Task.Run(() => new StartupService().MigrateLegacyRunEntry());
 
         LocationChanged += (_, _) => ScheduleSaveWindowPosition();
         SizeChanged += (_, _) => ScheduleSaveWindowPosition();
